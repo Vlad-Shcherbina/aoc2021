@@ -3,6 +3,7 @@
 mod sol01;
 mod sol02;
 mod sol03;
+mod sol04;
 
 fn main() {
     let accounts = ["gh", "sk"];
@@ -11,6 +12,7 @@ fn main() {
         (1, sol01::solve),
         (2, sol02::solve),
         (3, sol03::solve),
+        (4, sol04::solve),
     ];
 
     print!("  ");
