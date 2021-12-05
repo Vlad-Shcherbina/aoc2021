@@ -2,6 +2,7 @@
 
 mod sol01;
 mod sol02;
+mod sol03;
 
 fn main() {
     let accounts = ["gh", "sk"];
@@ -9,6 +10,7 @@ fn main() {
     let solvers: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
         (1, sol01::solve),
         (2, sol02::solve),
+        (3, sol03::solve),
     ];
 
     print!("  ");
