@@ -1,11 +1,14 @@
 #![feature(path_try_exists)]
 
 mod sol01;
+mod sol02;
 
 fn main() {
     let accounts = ["gh", "sk"];
-    let solvers = [
+    #[allow(clippy::type_complexity)]
+    let solvers: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
         (1, sol01::solve),
+        (2, sol02::solve),
     ];
 
     print!("  ");
@@ -13,7 +16,7 @@ fn main() {
         print!("{:>5}", a);
     }
     println!();
-    for (task, solve) in solvers {
+    for &(task, solve) in solvers {
         print!("{:02}", task);
         for acc in &accounts {
             let input_path = format!("data/{}/{:02}.in", acc, task);
