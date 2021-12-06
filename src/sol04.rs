@@ -40,15 +40,19 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         win_times.push((row_time.min(col_time), board_no));
     }
 
-    let &(t, board_no) = win_times.iter().min().unwrap();
-    let board = &boards[board_no];
-    let mut sum = 0;
-    for row in board {
-        for &cell in row {
-            if cell > t {
-                sum += seq[cell];
+    let part1 = *win_times.iter().min().unwrap();
+    let part2 = *win_times.iter().max().unwrap();
+
+    for (t, board_no) in [part1, part2] {
+        let board = &boards[board_no];
+        let mut sum = 0;
+        for row in board {
+            for &cell in row {
+                if cell > t {
+                    sum += seq[cell];
+                }
             }
         }
+        out((sum * seq[t]).to_string());
     }
-    out((sum * seq[t]).to_string());
 }
