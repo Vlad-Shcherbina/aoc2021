@@ -5,6 +5,12 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         .map(|s| s.parse().unwrap())
         .collect();
 
+    let mut seq_pos = vec![usize::MAX; 101];
+    for (i, &s) in seq.iter().enumerate() {
+        assert_eq!(seq_pos[s], usize::MAX);
+        seq_pos[s] = i;
+    }
+
     let mut boards = vec![];
     loop {
         match lines.next() {
@@ -14,52 +20,35 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         let mut board = vec![];
         for _ in 0..5 {
             let row: Vec<usize> = lines.next().unwrap().split_whitespace()
-                .map(|s| s.parse().unwrap())
+                .map(|s| seq_pos[s.parse::<usize>().unwrap()])
                 .collect();
             board.push(row);
         }
         boards.push(board);
     }
 
-    let mut idx: Vec<Vec<(usize, usize, usize)>> = vec![vec![]; 101];
-    for (i, board) in boards.iter().enumerate() {
-        for (j, row) in board.iter().enumerate() {
-            for (k, &cell) in row.iter().enumerate() {
-                idx[cell].push((i, j, k));
-            }
-        }
+    let mut win_times = vec![];
+    for (board_no, board) in boards.iter().enumerate() {
+        let row_time = board.iter()
+            .map(|row|
+                *row.iter().max().unwrap())
+            .min().unwrap();
+        let col_time = (0..5)
+            .map(|i|
+                board.iter().map(|row| row[i]).max().unwrap())
+            .min().unwrap();
+        win_times.push((row_time.min(col_time), board_no));
     }
 
-    let mut marked = vec![false; 101];
-    let mut row_cnt = vec![vec![0; 5]; boards.len()];
-    let mut col_cnt = vec![vec![0; 5]; boards.len()];
-    for num in seq {
-        assert!(!marked[num]);
-        marked[num] = true;
-        let mut winning_board = None;
-        for &(i, j, k) in &idx[num] {
-            row_cnt[i][j] += 1;
-            if row_cnt[i][j] == 5 {
-                assert_eq!(winning_board, None);
-                winning_board = Some(i);
+    let &(t, board_no) = win_times.iter().min().unwrap();
+    let board = &boards[board_no];
+    let mut sum = 0;
+    for row in board {
+        for &cell in row {
+            if cell > t {
+                sum += seq[cell];
             }
-            col_cnt[i][k] += 1;
-            if col_cnt[i][k] == 5 {
-                assert_eq!(winning_board, None);
-                winning_board = Some(i);
-            }
-        }
-        if let Some(q) = winning_board {
-            let mut sum = 0;
-            for row in &boards[q] {
-                for &cell in row {
-                    if !marked[cell] {
-                        sum += cell;
-                    }
-                }
-            }
-            out((sum * num).to_string());
-            break;
         }
     }
+    out((sum * seq[t]).to_string());
 }
