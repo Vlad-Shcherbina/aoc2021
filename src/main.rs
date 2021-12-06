@@ -1,4 +1,4 @@
-#![feature(path_try_exists)]
+#![feature(path_try_exists, iter_partition_in_place)]
 
 mod sol01;
 mod sol02;
