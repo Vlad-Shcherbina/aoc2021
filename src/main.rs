@@ -5,6 +5,7 @@ mod sol02;
 mod sol03;
 mod sol04;
 mod sol05;
+mod sol06;
 
 const ACCOUNTS: &[&str] = &["gh", "sk"];
 #[allow(clippy::type_complexity)]
@@ -14,6 +15,7 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
     (3, sol03::solve),
     (4, sol04::solve),
     (5, sol05::solve),
+    (6, sol06::solve),
 ];
 
 fn run() {
