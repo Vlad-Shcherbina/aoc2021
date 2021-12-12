@@ -1,29 +1,23 @@
 pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
-    let lines: Vec<&[u8]> = input.split_terminator('\n')
-        .map(|line| line.as_bytes())
-        .collect();
-    let h = lines.len();
-    let w = lines[0].len();
-    for line in &lines {
-        assert_eq!(line.len(), w);
+    let h = 2 + input.split_terminator('\n').count();
+    let w = 2 + input.split_terminator('\n').next().unwrap().len();
+    let mut hmap = vec![b'9'; w * h];
+    for (i, line) in input.split_terminator('\n').enumerate() {
+        assert_eq!(2 + line.len(), w);
+        hmap[(i + 1) * w + 1 .. (i + 2) * w - 1].copy_from_slice(line.as_bytes());
     }
+
     let mut part1 = 0;
-    for i in 0..h {
-        for j in 0..w {
-            let c = lines[i][j];
-            if i > 0 && lines[i - 1][j] <= c {
-                continue;
+    for i in 1 .. h - 1 {
+        for j in 1 .. w - 1 {
+            let idx = i * w + j;
+            let c = hmap[idx];
+            if c < hmap[idx - 1]
+            && c < hmap[idx + 1]
+            && c < hmap[idx - w]
+            && c < hmap[idx + w] {
+                part1 += c as i32 - b'0' as i32 + 1;
             }
-            if i + 1 < h && lines[i + 1][j] <= c {
-                continue;
-            }
-            if j > 0 && lines[i][j - 1] <= c {
-                continue;
-            }
-            if j + 1 < w && lines[i][j + 1] <= c {
-                continue;
-            }
-            part1 += c as i32 - '0' as i32 + 1;
         }
     }
     out(part1.to_string());
