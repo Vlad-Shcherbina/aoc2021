@@ -12,29 +12,45 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         dots.push((x, y));
     }
 
-    let line = it.next().unwrap();
-    let line = line.strip_prefix("fold along ").unwrap();
-    if let Some(fold_x) = line.strip_prefix("x=") {
-        let fold_x = fold_x.parse().unwrap();
-        for (x, _y) in &mut dots {
-            assert_ne!(*x, fold_x);
-            if *x > fold_x {
-                *x = 2 * fold_x - *x;
+    let mut first = true;
+    for line in it {
+        let line = line.strip_prefix("fold along ").unwrap();
+        if let Some(fold_x) = line.strip_prefix("x=") {
+            let fold_x = fold_x.parse().unwrap();
+            for (x, _y) in &mut dots {
+                assert_ne!(*x, fold_x);
+                if *x > fold_x {
+                    *x = 2 * fold_x - *x;
+                }
             }
-        }
-    } else if let Some(fold_y) = line.strip_prefix("y=") {
-        let fold_y = fold_y.parse().unwrap();
-        for (_x, y) in &mut dots {
-            assert_ne!(*y, fold_y);
-            if *y > fold_y {
-                *y = 2 * fold_y - *y;
+        } else if let Some(fold_y) = line.strip_prefix("y=") {
+            let fold_y = fold_y.parse().unwrap();
+            for (_x, y) in &mut dots {
+                assert_ne!(*y, fold_y);
+                if *y > fold_y {
+                    *y = 2 * fold_y - *y;
+                }
             }
+        } else {
+            panic!();
         }
-    } else {
-        panic!();
+
+        dots.sort_unstable();
+        dots.dedup();
+        if first {
+            out(dots.len().to_string());
+            first = false;
+        }
     }
 
-    dots.sort_unstable();
-    dots.dedup();
-    out(dots.len().to_string());
+    let w = 1 + dots.iter().map(|&(x, _y)| x).max().unwrap();
+    let h = 1 + dots.iter().map(|&(_x, y)| y).max().unwrap();
+    let mut res = vec![b'.'; ((w + 1) * h - 1) as usize];
+    for y in 0 .. h - 1 {
+        res[(w + y * (w + 1)) as usize] = b'\n';
+    }
+    for (x, y) in dots {
+        res[(x + y * (w + 1)) as usize] = b'*';
+    }
+    out(String::from_utf8(res).unwrap());
 }
