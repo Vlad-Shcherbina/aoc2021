@@ -44,9 +44,13 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     let mut visited = vec![false; names.len()];
 
     visited[start] = true;
-    let mut num_paths = 0;
 
+    let mut num_paths = 0;
     rec(&cave_type, &adj, end, start, &mut visited, &mut num_paths);
+    out(num_paths.to_string());
+
+    let mut num_paths = 0;
+    rec2(&cave_type, &adj, end, start, None, &mut visited, &mut num_paths);
     out(num_paths.to_string());
 }
 
@@ -70,6 +74,39 @@ fn rec(
 
         if cave_type[u] != Big {
             visited[u] = false;
+        }
+    }
+}
+
+fn rec2(
+    cave_type: &[CaveType], adj: &[Vec<usize>], end: usize,
+    last: usize,
+    visited_twice: Option<usize>,
+    visited: &mut Vec<bool>,
+    num_paths: &mut usize,
+) {
+    if last == end {
+        *num_paths += 1;
+    }
+    for &u in &adj[last] {
+        match cave_type[u] {
+            Terminal => {
+                if !visited[u] {
+                    visited[u] = true;
+                    rec2(cave_type, adj, end, u, visited_twice, visited, num_paths);
+                    visited[u] = false;
+                }
+            }
+            Small => {
+                if !visited[u] {
+                    visited[u] = true;
+                    rec2(cave_type, adj, end, u, visited_twice, visited, num_paths);
+                    visited[u] = false;
+                } else if visited_twice.is_none() {
+                    rec2(cave_type, adj, end, u, Some(u), visited, num_paths);
+                }
+            }
+            Big => rec2(cave_type, adj, end, u, visited_twice, visited, num_paths),
         }
     }
 }
