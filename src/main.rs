@@ -73,7 +73,7 @@ fn bench() {
                 continue;
             }
 
-            println!("{:02} {:>5}", task, acc);
+            print!("{:02} {:>5}", task, acc);
             let input = std::fs::read_to_string(input_path).unwrap();
             let expected_output = std::fs::read_to_string(output_path).unwrap();
 
@@ -87,7 +87,7 @@ fn bench() {
             solve(&input, &mut out);
 
             assert_eq!(output, expected_output);
-            dbg!(times);
+            println!("    {:?}", times);
         }
     }
 }
