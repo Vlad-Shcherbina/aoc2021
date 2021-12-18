@@ -10,7 +10,8 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         }
     }
     let mut num_flashes = 0;
-    for _ in 0..100 {
+    let mut step = 0;
+    loop {
         for j in 0..w {
             state[j] = -128;
             state[(h - 1) * w + j] = -128;
@@ -28,8 +29,9 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
                 *s = -128;
             }
         }
+        let mut num_flashes_this_step = 0;
         while let Some(idx) = to_flash.pop() {
-            num_flashes += 1;
+            num_flashes_this_step += 1;
             for i in 0..3 {
                 for j in 0..3 {
                     let idx2 = idx - w - 1 + i * w + j;
@@ -46,6 +48,16 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
                 *s = 0;
             }
         }
+        num_flashes += num_flashes_this_step;
+        step += 1;
+
+        if step == 100 {
+            out(num_flashes.to_string());
+        }
+        if num_flashes_this_step == (w - 2) * (h - 2) {
+            assert!(step >= 100);
+            out(step.to_string());
+            break;
+        }
     }
-    out(num_flashes.to_string());
 }
