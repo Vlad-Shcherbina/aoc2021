@@ -1,4 +1,6 @@
-#![feature(path_try_exists, iter_partition_in_place)]
+#![feature(path_try_exists)]
+#![feature(iter_partition_in_place)]
+#![feature(let_else)]
 
 mod sol01;
 mod sol02;
@@ -13,6 +15,7 @@ mod sol10;
 mod sol11;
 mod sol12;
 mod sol13;
+mod sol14;
 
 const ACCOUNTS: &[&str] = &["gh", "sk"];
 #[allow(clippy::type_complexity)]
@@ -30,6 +33,7 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
     (11, sol11::solve),
     (12, sol12::solve),
     (13, sol13::solve),
+    (14, sol14::solve),
 ];
 
 fn run() {
