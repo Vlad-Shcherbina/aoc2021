@@ -18,6 +18,7 @@ mod sol13;
 mod sol14;
 mod sol15;
 mod sol16;
+mod sol17;
 
 const ACCOUNTS: &[&str] = &["gh", "sk"];
 #[allow(clippy::type_complexity)]
@@ -38,6 +39,7 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
     (14, sol14::solve),
     (15, sol15::solve),
     (16, sol16::solve),
+    (17, sol17::solve),
 ];
 
 fn run() {
