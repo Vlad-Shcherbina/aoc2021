@@ -1,0 +1,44 @@
+pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
+    let h = 2 + input.split_terminator('\n').count();
+    let w = 2 + input.split_terminator('\n').next().unwrap().len();
+    let mut risk = vec![0; w * h];
+    for (i, line) in input.split_terminator('\n').enumerate() {
+        assert_eq!(2 + line.len(), w);
+        for (j, c) in line.bytes().enumerate() {
+            assert!((b'0'..=b'9').contains(&c));
+            risk[(i + 1) * w + (j + 1)] = (c - b'0') as i32;
+        }
+    }
+
+    let mut dist = vec![i32::MAX; w * h];
+    for i in 0..h {
+        dist[i * w] = 0;
+        dist[i * w + w - 1] = 0;
+    }
+    for j in 0..w {
+        dist[j] = 0;
+        dist[j + w * (h - 1)] = 0;
+    }
+
+    let mut qs = vec![vec![]; (w + h) * 9];
+    qs[0].push(1 + w);
+    dist[1 + w] = 0;
+
+    let target = w - 2 + (h - 2) * w;
+
+    for step in 0.. {
+        for u in std::mem::take(&mut qs[step]) {
+            if u == target {
+                out(dist[u].to_string());
+                return;
+            }
+            for v in [u - 1, u + 1, u - w, u + w] {
+                let d = dist[u] + risk[v];
+                if d < dist[v] {
+                    dist[v] = d;
+                    qs[d as usize].push(v);
+                }
+            }
+        }
+    }
+}
