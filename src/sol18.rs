@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Number {
     Regular(i32),
     Pair(Box<(Number, Number)>),
@@ -6,14 +6,27 @@ enum Number {
 use Number::*;
 
 pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
-    let mut it = input.split_terminator('\n');
-    let mut s = Number::parse(it.next().unwrap());
-    for line in it {
-        let num = Number::parse(line);
-        s = Pair(Box::new((s, num)));
+    let numbers: Vec<_> = input.split_terminator('\n')
+        .map(Number::parse)
+        .collect();
+    let mut s = numbers[0].clone();
+    for x in &numbers[1..] {
+        s = Pair(Box::new((s, x.clone())));
         s.reduce();
     }
     out(s.magnitude().to_string());
+
+    let mut max_mag = 0;
+    for (i, x) in numbers.iter().enumerate() {
+        for (j, y) in numbers.iter().enumerate() {
+            if i != j {
+                let mut z = Pair(Box::new((x.clone(), y.clone())));
+                z.reduce();
+                max_mag = max_mag.max(z.magnitude());
+            }
+        }
+    }
+    out(max_mag.to_string());
 }
 
 impl Number {
