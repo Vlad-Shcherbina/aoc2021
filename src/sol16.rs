@@ -33,6 +33,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     }
 
     out(part1(&root).to_string());
+    out(part2(&root).to_string());
 }
 
 fn part1(p: &Packet) -> i32 {
@@ -40,6 +41,38 @@ fn part1(p: &Packet) -> i32 {
         &Literal { version, .. } => version,
         Operator { version, children, ..} =>
             *version + children.iter().map(part1).sum::<i32>()
+    }
+}
+
+fn part2(p: &Packet) -> i64 {
+    match p {
+        &Literal { value, .. } => value,
+        Operator { tp, children, .. } => match tp {
+            0 => children.iter().map(part2).sum(),
+            1 => {
+                let mut res = 1;
+                for child in children {
+                    res *= part2(child);
+                }
+                res
+            }
+            2 => children.iter().map(part2).min().unwrap(),
+            3 => children.iter().map(part2).max().unwrap(),
+            4 => unreachable!("literal"),
+            5 => {
+                assert_eq!(children.len(), 2);
+                (part2(&children[0]) > part2(&children[1])) as i64
+            }
+            6 => {
+                assert_eq!(children.len(), 2);
+                (part2(&children[0]) < part2(&children[1])) as i64
+            }
+            7 => {
+                assert_eq!(children.len(), 2);
+                (part2(&children[0]) == part2(&children[1])) as i64
+            }
+            _ => panic!(),
+        }
     }
 }
 
