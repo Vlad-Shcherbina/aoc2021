@@ -39,14 +39,15 @@ fn dijkstra(h: usize, w: usize, risk: &[i32]) -> i32 {
         dist[j + w * (h - 1)] = 0;
     }
 
-    let mut qs = vec![vec![]; (w + h) * 9];
+    let mut qs = vec![vec![]; 10];
     qs[0].push(1 + w);
     dist[1 + w] = 0;
 
     let target = w - 2 + (h - 2) * w;
 
     for step in 0.. {
-        for u in std::mem::take(&mut qs[step]) {
+        let qq = std::mem::take(&mut qs[step % 10]);
+        for &u in &qq {
             if u == target {
                 return dist[u];
             }
@@ -54,10 +55,13 @@ fn dijkstra(h: usize, w: usize, risk: &[i32]) -> i32 {
                 let d = dist[u] + risk[v];
                 if d < dist[v] {
                     dist[v] = d;
-                    qs[d as usize].push(v);
+                    qs[d as usize % 10].push(v);
                 }
             }
         }
+        assert_eq!(qs[step % 10].capacity(), 0);
+        qs[step % 10] = qq;
+        qs[step % 10].clear();
     }
     unreachable!()
 }
