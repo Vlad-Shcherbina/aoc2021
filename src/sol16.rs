@@ -1,3 +1,16 @@
+enum Packet {
+    Literal {
+        version: i32,
+        value: i64,
+    },
+    Operator {
+        version: i32,
+        tp: i32,
+        children: Vec<Packet>,
+    },
+}
+use Packet::*;
+
 pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     let input = input.trim_end();
     let mut bits = vec![0u8; input.len() * 4];
@@ -14,11 +27,54 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         bits[i * 4 + 3] = c % 2;
     }
     let mut bits: &[u8] = &bits;
-    let mut version_sum = 0;
-    read_packet(&mut bits, &mut version_sum);
-    out(version_sum.to_string());
+    let root = read_packet(&mut bits);
     for &bit in bits {
         assert_eq!(bit, 0);
+    }
+
+    out(part1(&root).to_string());
+}
+
+fn part1(p: &Packet) -> i32 {
+    match p {
+        &Literal { version, .. } => version,
+        Operator { version, children, ..} =>
+            *version + children.iter().map(part1).sum::<i32>()
+    }
+}
+
+fn read_packet(bits: &mut &[u8]) -> Packet {
+    let version = read_num(3, bits);
+    let tp = read_num(3, bits);
+    if tp == 4 { // literal value
+        let mut value = 0i64;
+        loop {
+            let group = read_num(5, bits);
+            value *= 16;
+            value += group as i64 % 16;
+            if group < 16 {
+                return Literal { version, value };
+            }
+        }
+    } else {
+        let indicator = read_num(1, bits);
+        if indicator == 0 {
+            let len = read_num(15, bits) as usize;
+            let target_remaining_len = bits.len() - len;
+            let mut children = vec![];
+            while bits.len() > target_remaining_len {
+                children.push(read_packet(bits));
+            }
+            assert_eq!(bits.len(), target_remaining_len);
+            Operator { version, tp, children }
+        } else {
+            let num = read_num(11, bits);
+            let mut children = Vec::with_capacity(num as usize);
+            for _ in 0..num {
+                children.push(read_packet(bits));
+            }
+            Operator { version, tp, children }
+        }
     }
 }
 
@@ -30,36 +86,4 @@ fn read_num(len: i32, bits: &mut &[u8]) -> i32 {
         *bits = &bits[1..];
     }
     res
-}
-
-fn read_packet(bits: &mut &[u8], version_sum: &mut i32) {
-    let v = read_num(3, bits);
-    *version_sum += v;
-    let t = read_num(3, bits);
-    if t == 4 { // literal value
-        let mut _res = 0i64;
-        loop {
-            let group = read_num(5, bits);
-            _res *= 16;
-            _res += group as i64 % 16;
-            if group < 16 {
-                break;
-            }
-        }
-    } else {
-        let indicator = read_num(1, bits);
-        if indicator == 0 {
-            let len = read_num(15, bits) as usize;
-            let target_remaining_len = bits.len() - len;
-            while bits.len() > target_remaining_len {
-                read_packet(bits, version_sum);
-            }
-            assert_eq!(bits.len(), target_remaining_len);
-        } else {
-            let num = read_num(11, bits);
-            for _ in 0..num {
-                read_packet(bits, version_sum);
-            }
-        }
-    }
 }
