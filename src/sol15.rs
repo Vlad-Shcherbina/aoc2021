@@ -10,6 +10,25 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         }
     }
 
+    out(dijkstra(h, w, &risk).to_string());
+
+    let w2 = (w - 2) * 5 + 2;
+    let h2 = (w - 2) * 5 + 2;
+    let mut risk2 = vec![0; w2 * h2];
+    for ii in 0..5 {
+        for i in 1 .. h - 1 {
+            for jj in 0..5 {
+                for j in 1 .. w - 1 {
+                    let r = (risk[i * w + j] + (ii + jj) as i32 + 8) % 9 + 1;
+                    risk2[w2 * (ii * (h - 2) + i) + (jj * (w - 2) + j)] = r;
+                }
+            }
+        }
+    }
+    out(dijkstra(h2, w2, &risk2).to_string());
+}
+
+fn dijkstra(h: usize, w: usize, risk: &[i32]) -> i32 {
     let mut dist = vec![i32::MAX; w * h];
     for i in 0..h {
         dist[i * w] = 0;
@@ -29,8 +48,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     for step in 0.. {
         for u in std::mem::take(&mut qs[step]) {
             if u == target {
-                out(dist[u].to_string());
-                return;
+                return dist[u];
             }
             for v in [u - 1, u + 1, u - w, u + w] {
                 let d = dist[u] + risk[v];
@@ -41,4 +59,5 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
             }
         }
     }
+    unreachable!()
 }
