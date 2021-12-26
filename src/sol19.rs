@@ -30,6 +30,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
 
     let mut all_pts = vec![];
 
+    let mut scanner_positions = vec![(0, 0, 0); scanners.len()];
     let mut visited = vec![false; scanners.len()];
     visited[0] = true;
     let mut q = vec![scanners[0].clone()];
@@ -43,6 +44,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
                     [] => {}
                     &[d] => {
                         visited[i] = true;
+                        scanner_positions[i] = d;
                         let pts1: Vec<Vec3> = ts.iter().map(|&p| sub(p, d)).collect();
                         q.push(pts1);
                         break;
@@ -57,6 +59,15 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     all_pts.sort_unstable();
     all_pts.dedup();
     out(all_pts.len().to_string());
+
+    let mut part2 = 0;
+    for &s1 in &scanner_positions {
+        for &s2 in &scanner_positions {
+            let d = sub(s1, s2);
+            part2 = part2.max(d.0.abs() + d.1.abs() + d.2.abs());
+        }
+    }
+    out(part2.to_string());
 }
 
 fn transform(mut a: Vec3, mut k: u8) -> Vec3 {
