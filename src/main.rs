@@ -1,6 +1,7 @@
 #![feature(path_try_exists)]
 #![feature(iter_partition_in_place)]
 #![feature(let_else)]
+#![feature(destructuring_assignment)]
 
 mod sol01;
 mod sol02;
@@ -21,6 +22,7 @@ mod sol16;
 mod sol17;
 mod sol18;
 mod sol19;
+mod sol20;
 
 const ACCOUNTS: &[&str] = &["gh", "sk"];
 #[allow(clippy::type_complexity)]
@@ -44,6 +46,7 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
     (17, sol17::solve),
     (18, sol18::solve),
     (19, sol19::solve),
+    (20, sol20::solve),
 ];
 
 fn run() {
