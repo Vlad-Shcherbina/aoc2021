@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use fxhash::FxHashSet as HashSet;
 
 pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     let mut it = input.split_terminator('\n');
@@ -9,7 +9,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     assert!(empty.is_empty());
 
     let mut default = false;
-    let mut points = HashSet::new();
+    let mut points = HashSet::default();
     for (i, line) in it.enumerate() {
         for (j, c) in line.bytes().enumerate() {
             let v = to_bool(c);
@@ -48,7 +48,7 @@ fn step(
         max_i = max_i.max(i);
         max_j = max_j.max(j);
     }
-    let mut new_points = HashSet::new();
+    let mut new_points = HashSet::default();
     for i in min_i - 1 .. max_i + 2 {
         for j in min_j - 1 .. max_j + 2 {
             let mut idx = 0;
