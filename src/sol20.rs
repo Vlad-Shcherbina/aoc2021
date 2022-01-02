@@ -22,7 +22,12 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     for _ in 0..2 {
         (default, points) = step(&rule, default, &points);
     }
+    assert!(!default);
+    out(points.len().to_string());
 
+    for _ in 2..50 {
+        (default, points) = step(&rule, default, &points);
+    }
     assert!(!default);
     out(points.len().to_string());
 }
