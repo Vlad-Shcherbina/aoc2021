@@ -27,6 +27,16 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         }
     }
 
+    let mut dice_cnts: HashMap<i32, u64> = HashMap::default();
+    for d1 in 1..4 {
+        for d2 in 1..4 {
+            for d3 in 1..4 {
+                *dice_cnts.entry(d1 + d2 + d3).or_default() += 1;
+            }
+        }
+    }
+    let dice_cnts: Vec<_> = dice_cnts.into_iter().collect();
+
     let mut win_cnt = [0, 0];
     let mut cnts = HashMap::default();
     cnts.insert(([0, 0], [start1, start2]), 1u64);
@@ -37,20 +47,16 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         let player = t % 2;
         let mut new_cnts = HashMap::default();
         for ((scores, poss), cnt) in cnts {
-            for d1 in 1..4 {
-                for d2 in 1..4 {
-                    for d3 in 1..4 {
-                        let mut new_poss = poss;
-                        new_poss[player] += d1 + d2 + d3;
-                        new_poss[player] = (new_poss[player] + 10 - 1) % 10 + 1;
-                        let mut new_scores = scores;
-                        new_scores[player] += new_poss[player];
-                        if new_scores[player] >= 21 {
-                            win_cnt[player] += cnt;
-                        } else {
-                            *new_cnts.entry((new_scores, new_poss)).or_default() += cnt;
-                        }
-                    }
+            for &(d, d_cnt) in &dice_cnts {
+                let mut new_poss = poss;
+                new_poss[player] += d;
+                new_poss[player] = (new_poss[player] + 10 - 1) % 10 + 1;
+                let mut new_scores = scores;
+                new_scores[player] += new_poss[player];
+                if new_scores[player] >= 21 {
+                    win_cnt[player] += cnt * d_cnt;
+                } else {
+                    *new_cnts.entry((new_scores, new_poss)).or_default() += cnt * d_cnt;
                 }
             }
         }
