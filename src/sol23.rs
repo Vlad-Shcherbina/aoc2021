@@ -6,11 +6,11 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
 
     let mut initial_state = State {
         hallway: [None; 11],
-        rooms: [[None; 2]; 4],
+        rooms: vec![[None; 4]; 2],
     };
-    for (i, room) in initial_state.rooms.iter_mut().enumerate() {
-        for (j, c) in room.iter_mut().enumerate() {
-            *c = Some(input[i + 4 * j] as u8 - b'A');
+    for (i, row) in initial_state.rooms.iter_mut().enumerate() {
+        for (j, c) in row.iter_mut().enumerate() {
+            *c = Some(input[i * 4 + j] as u8 - b'A');
         }
     }
 
@@ -70,24 +70,20 @@ const MOVE_COST: [i32; 4] = [1, 10, 100, 1000];
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct State {
     hallway: [Option<u8>; 11],
-    rooms: [[Option<u8>; 2]; 4],
+    rooms: Vec<[Option<u8>; 4]>,
 }
 
 impl State {
     fn is_final(&self) -> bool {
-        self.rooms.iter().enumerate().all(|(i, room)| {
-            room[0] == Some(i as u8) &&
-            room[1] == Some(i as u8)
-        })
+        self.rooms.iter()
+            .all(|layer| layer == &[Some(0), Some(1), Some(2), Some(3)])
     }
 
     fn adj(&self) -> Vec<(i32, State)> {
         let mut res = vec![];
-        for (i, room) in self.rooms.iter().enumerate() {
-            for (j, &pod) in room.iter().enumerate() {
-                let Some(pod) = pod else { continue };
-                if j == 1 && room[0].is_some() { continue }
-
+        for i in 0..4 {
+            for j in 0..self.rooms.len() {
+                let Some(pod) = self.rooms[j][i] else { continue };
                 for dx in [-1, 1] {
                     let mut x = ROOM_POS[i] as i32;
                     let mut dist = j + 1;
@@ -99,7 +95,7 @@ impl State {
                         }
                         if !ROOM_POS.contains(&(x as usize)) {
                             let mut s2 = self.clone();
-                            s2.rooms[i][j] = None;
+                            s2.rooms[j][i] = None;
                             s2.hallway[x as usize] = Some(pod);
                             res.push((dist as i32 * MOVE_COST[pod as usize], s2));
                         }
@@ -107,15 +103,22 @@ impl State {
                         dist += 1;
                     }
                 }
+                break;
             }
         }
 
         for (x, &pod) in self.hallway.iter().enumerate() {
             let Some(pod) = pod else { continue };
-            let room = &self.rooms[pod as usize];
-            if room[0].is_some() { continue };
-            if let Some(q) = room[1] {
-                if q != pod { continue }
+            let i = pod as usize;
+
+            let can_enter = self.rooms.iter()
+                .all(|layer| layer[i].map_or(true, |p| p == pod));
+            if !can_enter {
+                continue;
+            }
+
+            if self.rooms[0][i].is_some() {
+                continue;
             }
 
             let x2 = ROOM_POS[pod as usize];
@@ -132,13 +135,14 @@ impl State {
                 x - x2
             };
 
-            #[allow(clippy::needless_range_loop)]
-            for j in 0..2 {
-                if room[j].is_some() { break; }
+            for j in 0..self.rooms.len() {
+                if self.rooms[j][i].is_some() {
+                    break;
+                }
                 let mut s2 = self.clone();
                 s2.hallway[x] = None;
-                s2.rooms[pod as usize][j] = Some(pod);
-                let cost = (dist + j + 1) as i32 * MOVE_COST[pod as usize];
+                s2.rooms[j][i] = Some(pod);
+                let cost = (dist + j + 1) as i32 * MOVE_COST[i];
                 res.push((cost, s2));
             }
         }
@@ -160,10 +164,10 @@ impl std::fmt::Debug for State {
             write!(f, "{}", to_char(x))?;
         }
         writeln!(f)?;
-        for row in 0..2 {
+        for row in &self.rooms {
             write!(f, "   ")?;
-            for room in &self.rooms {
-                write!(f, " {}", to_char(room[row]))?;
+            for &pod in row {
+                write!(f, " {}", to_char(pod))?;
             }
             writeln!(f)?;
         }
