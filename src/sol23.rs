@@ -1,5 +1,4 @@
 use fxhash::FxHashSet as HashSet;
-use fxhash::FxHashMap as HashMap;
 
 pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     let input: Vec<char> = input.chars().filter(|c| ('A'..='D').contains(c)).collect();
@@ -16,25 +15,52 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     }
 
     let mut visited = HashSet::default();
-    let mut frontier = HashMap::default();
-    frontier.insert(initial_state, 0);
+    let mut frontier = std::collections::BinaryHeap::new();
+    frontier.push(HeapEntry {
+        cost: 0,
+        state: initial_state.clone(),
+    });
     loop {
-        let (s, _) = frontier.iter().min_by_key(|&(_s, &cost)| cost).unwrap();
-        let s = s.clone();
-        let (s, cost) = frontier.remove_entry(&s).unwrap();
+        let HeapEntry { cost, state: s } = frontier.pop().unwrap();
         if s.is_final() {
             out(cost.to_string());
             break;
         }
-        let was_new = visited.insert(s.clone());
+        if !visited.insert(s.clone()) {
+            continue;
+        }
         for (d, s2) in s.adj() {
             if visited.contains(&s2) { continue }
             let cost2 = cost + d;
-            frontier.entry(s2)
-                .and_modify(|c2| *c2 = (*c2).min(cost2))
-                .or_insert(cost2);
+            frontier.push(HeapEntry {
+                cost: cost2,
+                state: s2,
+            });
         }
-        assert!(was_new);
+    }
+}
+
+#[derive(Eq)]
+struct HeapEntry {
+    cost: i32,
+    state: State,
+}
+
+impl Ord for HeapEntry {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.cost.cmp(&other.cost).reverse()
+    }
+}
+
+impl PartialEq for HeapEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+
+impl PartialOrd for HeapEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
