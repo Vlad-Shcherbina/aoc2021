@@ -14,28 +14,33 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         }
     }
 
-    let mut visited = HashSet::default();
-    let mut frontier = std::collections::BinaryHeap::new();
-    frontier.push(HeapEntry {
-        cost: 0,
-        state: initial_state.clone(),
-    });
-    loop {
-        let HeapEntry { cost, state: s } = frontier.pop().unwrap();
-        if s.is_final() {
-            out(cost.to_string());
-            break;
-        }
-        if !visited.insert(s.clone()) {
-            continue;
-        }
-        for (d, s2) in s.adj() {
-            if visited.contains(&s2) { continue }
-            let cost2 = cost + d;
-            frontier.push(HeapEntry {
-                cost: cost2,
-                state: s2,
-            });
+    let mut initial_state2 = initial_state.clone();
+    initial_state2.unfold();
+
+    for initial_state in [initial_state, initial_state2] {
+        let mut visited = HashSet::default();
+        let mut frontier = std::collections::BinaryHeap::new();
+        frontier.push(HeapEntry {
+            cost: 0,
+            state: initial_state.clone(),
+        });
+        loop {
+            let HeapEntry { cost, state: s } = frontier.pop().unwrap();
+            if s.is_final() {
+                out(cost.to_string());
+                break;
+            }
+            if !visited.insert(s.clone()) {
+                continue;
+            }
+            for (d, s2) in s.adj() {
+                if visited.contains(&s2) { continue }
+                let cost2 = cost + d;
+                frontier.push(HeapEntry {
+                    cost: cost2,
+                    state: s2,
+                });
+            }
         }
     }
 }
@@ -74,6 +79,11 @@ struct State {
 }
 
 impl State {
+    fn unfold(&mut self) {
+        self.rooms.insert(1, [Some(3), Some(2), Some(1), Some(0)]);  // D C B A
+        self.rooms.insert(2, [Some(3), Some(1), Some(0), Some(2)]);  // D B A C
+    }
+
     fn is_final(&self) -> bool {
         self.rooms.iter()
             .all(|layer| layer == &[Some(0), Some(1), Some(2), Some(3)])
