@@ -8,18 +8,23 @@ pub(crate) fn solve(mut input: &str, out: &mut dyn FnMut(String)) {
         input = rest;
     }
 
-    let mut ws = vec![];
-    let res = rec(&blocks, &mut ws, 0);
-    assert!(res);
+    let mut digits: Vec<i64> = (1..=9).collect();
+    for _ in 0..2 {
+        digits.reverse();
+        let mut ws = vec![];
+        let res = rec(&digits, &blocks, &mut ws, 0);
+        assert!(res);
 
-    let mut s = String::new();
-    for w in ws {
-        write!(s, "{}", w).unwrap();
+        let mut s = String::new();
+        for w in ws {
+            write!(s, "{}", w).unwrap();
+        }
+        out(s);
     }
-    out(s);
+
 }
 
-fn rec(blocks: &[Block], ws: &mut Vec<i64>, z: i64) -> bool {
+fn rec(digits: &[i64], blocks: &[Block], ws: &mut Vec<i64>, z: i64) -> bool {
     match blocks.split_first() {
         None => {
             return z == 0;
@@ -36,10 +41,10 @@ fn rec(blocks: &[Block], ws: &mut Vec<i64>, z: i64) -> bool {
             if tz.abs() > 30 {
                 return false;
             }
-            for w in (1 .. 9 + 1).rev() {
+            for &w in digits {
                 let z1 = block.run(z, w);
                 ws.push(w);
-                if rec(blocks, ws, z1) {
+                if rec(digits, blocks, ws, z1) {
                     return true;
                 }
                 ws.pop().unwrap();
