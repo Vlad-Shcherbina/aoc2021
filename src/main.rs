@@ -1,7 +1,6 @@
 #![feature(path_try_exists)]
 #![feature(iter_partition_in_place)]
 #![feature(let_else)]
-#![feature(destructuring_assignment)]
 
 mod sol01;
 mod sol02;
