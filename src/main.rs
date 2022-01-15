@@ -58,39 +58,51 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
     (25, sol25::solve),
 ];
 
-fn run() {
-    print!("  ");
-    for a in ACCOUNTS {
-        print!("{:>5}", a);
-    }
-    println!();
+fn run(task_to_run: i32, generate: bool) {
     for &(task, solve) in SOLVERS {
-        print!("{:02}", task);
+        if task != task_to_run {
+            continue;
+        }
         for acc in ACCOUNTS {
+            eprintln!("Day {:02}, {}", task, acc);
             let input_path = format!("data/{}/{:02}.in", acc, task);
             let output_path = format!("data/{}/{:02}.out", acc, task);
-            if std::fs::try_exists(&input_path).unwrap() {
-                let input = std::fs::read_to_string(input_path).unwrap();
-                let mut output = String::new();
-                let mut out = |s: String| { output.push_str(&s); output.push('\n'); };
-                solve(&input, &mut out);
+            if !std::fs::try_exists(&input_path).unwrap() {
+                continue;
+            }
+
+            let input = std::fs::read_to_string(input_path).unwrap();
+            let mut output = String::new();
+            let mut out = |s: String| {
+                output.push_str(&s); output.push('\n');
+                eprintln!("OUT: {}", s);
+            };
+
+            solve(&input, &mut out);
+
+            if generate {
+                std::fs::write(output_path, output).unwrap();
+            } else {
                 if std::fs::try_exists(&output_path).unwrap() {
                     let expected_output = std::fs::read_to_string(output_path).unwrap();
-                    assert_eq!(output, expected_output);
+                    if output != expected_output {
+                        eprintln!("does not match expected output");
+                        eprintln!("{}", expected_output);
+                    }
                 } else {
-                    dbg!(output);
+                    eprintln!("output file does not exist");
                 }
-                print!("{:>5}", "ok");
-            } else {
-                print!("{:>5}", "--");
             }
+            eprintln!();
         }
-        println!();
     }
 }
 
-fn bench() {
+fn bench(tasks: &[i32]) {
     for &(task, solve) in SOLVERS {
+        if !tasks.contains(&task) {
+            continue;
+        }
         for acc in ACCOUNTS {
             let input_path = format!("data/{}/{:02}.in", acc, task);
             let output_path = format!("data/{}/{:02}.out", acc, task);
@@ -122,8 +134,10 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
     match args.as_slice() {
-        [] => run(),
-        ["bench"] => bench(),
-        _ => panic!(),
+        ["bench"] => bench(&(1..=25).collect::<Vec<_>>()),
+        ["bench", task] => bench(&[task.parse().unwrap()]),
+        [task] => run(task.parse().unwrap(), false),
+        [task, "gen"] => run(task.parse().unwrap(), true),
+        _ => panic!()
     }
 }
