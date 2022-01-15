@@ -91,11 +91,11 @@ impl State {
 
     fn adj(&self) -> Vec<(i32, State)> {
         let mut res = vec![];
-        for i in 0..4 {
+        for (i, &room_pos) in ROOM_POS.iter().enumerate() {
             for j in 0..self.rooms.len() {
                 let Some(pod) = self.rooms[j][i] else { continue };
                 for dx in [-1, 1] {
-                    let mut x = ROOM_POS[i] as i32;
+                    let mut x = room_pos as i32;
                     let mut dist = j + 1;
                     x += dx;
                     dist += 1;

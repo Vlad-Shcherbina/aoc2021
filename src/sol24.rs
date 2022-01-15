@@ -26,9 +26,7 @@ pub(crate) fn solve(mut input: &str, out: &mut dyn FnMut(String)) {
 
 fn rec(digits: &[i64], blocks: &[Block], ws: &mut Vec<i64>, z: i64) -> bool {
     match blocks.split_first() {
-        None => {
-            return z == 0;
-        }
+        None => z == 0,
         Some((block, blocks)) => {
             let mut tz = z;
             for b in blocks {
