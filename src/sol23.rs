@@ -6,7 +6,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
 
     let mut initial_state = State {
         hallway: [None; 11],
-        rooms: vec![[None; 4]; 2],
+        rooms: [[None; 4]; 2],
     };
     for (i, row) in initial_state.rooms.iter_mut().enumerate() {
         for (j, c) in row.iter_mut().enumerate() {
@@ -14,10 +14,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         }
     }
 
-    let mut initial_state2 = initial_state.clone();
-    initial_state2.unfold();
-
-    for initial_state in [initial_state, initial_state2] {
+    fn solve<const N: usize>(initial_state: &State<N>) -> i32 {
         // TODO: this implementation of A* (basically, minor tweak to Dijkstra)
         // is incorrect if heuristic function is not consistent (aka monotone).
         let mut visited = HashSet::default();
@@ -37,8 +34,7 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
                 log::info!("{} visited", visited.len());
                 log::info!("{} frontier", frontier.len());
                 log::info!("max frontier entry: {}", frontier.iter().map(|e| e.heuristic_cost).max().unwrap());
-                out(actual_cost.to_string());
-                break;
+                return actual_cost;
             }
             if !visited.insert(s.clone()) {
                 continue;
@@ -53,28 +49,31 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
             }
         }
     }
+
+    out(solve(&initial_state).to_string());
+    out(solve(&initial_state.unfold()).to_string());
 }
 
 #[derive(Eq)]
-struct HeapEntry {
+struct HeapEntry<const N: usize> {
     heuristic_cost: i32,
     actual_cost: i32,
-    state: State,
+    state: State<N>,
 }
 
-impl Ord for HeapEntry {
+impl<const N: usize> Ord for HeapEntry<N> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.heuristic_cost.cmp(&other.heuristic_cost).reverse()
     }
 }
 
-impl PartialEq for HeapEntry {
+impl<const N: usize> PartialEq for HeapEntry<N> {
     fn eq(&self, other: &Self) -> bool {
         self.cmp(other) == std::cmp::Ordering::Equal
     }
 }
 
-impl PartialOrd for HeapEntry {
+impl<const N: usize> PartialOrd for HeapEntry<N> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
@@ -84,17 +83,26 @@ const ROOM_POS: [usize; 4] = [2, 4, 6, 8];
 const MOVE_COST: [i32; 4] = [1, 10, 100, 1000];
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct State {
+struct State<const N: usize> {
     hallway: [Option<u8>; 11],
-    rooms: Vec<[Option<u8>; 4]>,
+    rooms: [[Option<u8>; 4]; N],
 }
 
-impl State {
-    fn unfold(&mut self) {
-        self.rooms.insert(1, [Some(3), Some(2), Some(1), Some(0)]);  // D C B A
-        self.rooms.insert(2, [Some(3), Some(1), Some(0), Some(2)]);  // D B A C
+impl State<2> {
+    fn unfold(&self) -> State<4> {
+        State {
+            hallway: self.hallway,
+            rooms: [
+                self.rooms[0],
+                [Some(3), Some(2), Some(1), Some(0)],  // D C B A
+                [Some(3), Some(1), Some(0), Some(2)],  // D B A C
+                self.rooms[1],
+            ]
+        }
     }
+}
 
+impl<const N: usize> State<N> {
     fn is_final(&self) -> bool {
         self.rooms.iter()
             .all(|layer| layer == &[Some(0), Some(1), Some(2), Some(3)])
@@ -121,7 +129,7 @@ impl State {
         res
     }
 
-    fn adj(&self) -> Vec<(i32, State)> {
+    fn adj(&self) -> Vec<(i32, State<N>)> {
         let mut res = vec![];
         for (i, &room_pos) in ROOM_POS.iter().enumerate() {
             for j in 0..self.rooms.len() {
@@ -192,7 +200,7 @@ impl State {
     }
 }
 
-impl std::fmt::Debug for State {
+impl<const N: usize> std::fmt::Debug for State<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fn to_char(x: Option<u8>) -> char {
             match x {
