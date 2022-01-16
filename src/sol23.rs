@@ -18,19 +18,26 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
     initial_state2.unfold();
 
     for initial_state in [initial_state, initial_state2] {
+        // TODO: this implementation of A* (basically, minor tweak to Dijkstra)
+        // is incorrect if heuristic function is not consistent (aka monotone).
         let mut visited = HashSet::default();
         let mut frontier = std::collections::BinaryHeap::new();
         frontier.push(HeapEntry {
-            cost: 0,
+            heuristic_cost: initial_state.heuristic_dist_to_final(),
+            actual_cost: 0,
             state: initial_state.clone(),
         });
         loop {
-            let HeapEntry { cost, state: s } = frontier.pop().unwrap();
+            let HeapEntry {
+                heuristic_cost: _,
+                actual_cost,
+                state: s,
+            } = frontier.pop().unwrap();
             if s.is_final() {
                 log::info!("{} visited", visited.len());
                 log::info!("{} frontier", frontier.len());
-                log::info!("max frontier entry: {}", frontier.iter().map(|e| e.cost).max().unwrap());
-                out(cost.to_string());
+                log::info!("max frontier entry: {}", frontier.iter().map(|e| e.heuristic_cost).max().unwrap());
+                out(actual_cost.to_string());
                 break;
             }
             if !visited.insert(s.clone()) {
@@ -38,9 +45,9 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
             }
             for (d, s2) in s.adj() {
                 if visited.contains(&s2) { continue }
-                let cost2 = cost + d;
                 frontier.push(HeapEntry {
-                    cost: cost2,
+                    heuristic_cost: actual_cost + d + s2.heuristic_dist_to_final(),
+                    actual_cost: actual_cost + d,
                     state: s2,
                 });
             }
@@ -50,13 +57,14 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
 
 #[derive(Eq)]
 struct HeapEntry {
-    cost: i32,
+    heuristic_cost: i32,
+    actual_cost: i32,
     state: State,
 }
 
 impl Ord for HeapEntry {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.cost.cmp(&other.cost).reverse()
+        self.heuristic_cost.cmp(&other.heuristic_cost).reverse()
     }
 }
 
@@ -90,6 +98,27 @@ impl State {
     fn is_final(&self) -> bool {
         self.rooms.iter()
             .all(|layer| layer == &[Some(0), Some(1), Some(2), Some(3)])
+    }
+
+    fn heuristic_dist_to_final(&self) -> i32 {
+        let mut res = 0;
+        for (i, cell) in self.hallway.iter().enumerate() {
+            if let &Some(q) = cell {
+                res += ((ROOM_POS[q as usize] as i32 - i as i32).abs() + 1)
+                    * MOVE_COST[q as usize];
+            }
+        }
+        for (i, layer) in self.rooms.iter().enumerate() {
+            for (j, cell) in layer.iter().enumerate() {
+                if let &Some(q) = cell {
+                    if q as usize != j {
+                        res += (i as i32 + 1 + (ROOM_POS[j] as i32 - ROOM_POS[q as usize] as i32).abs() + 1)
+                            * MOVE_COST[q as usize]
+                    }
+                }
+            }
+        }
+        res
     }
 
     fn adj(&self) -> Vec<(i32, State)> {
