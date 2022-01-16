@@ -88,16 +88,14 @@ fn run(task_to_run: i32, generate: bool) {
 
             if generate {
                 std::fs::write(output_path, output).unwrap();
-            } else {
-                if std::fs::try_exists(&output_path).unwrap() {
-                    let expected_output = std::fs::read_to_string(output_path).unwrap();
-                    if output != expected_output {
-                        log::info!("does not match expected output");
-                        log::info!("{}", expected_output);
-                    }
-                } else {
-                    log::info!("output file does not exist");
+            } else if std::fs::try_exists(&output_path).unwrap() {
+                let expected_output = std::fs::read_to_string(output_path).unwrap();
+                if output != expected_output {
+                    log::info!("does not match expected output");
+                    log::info!("{}", expected_output);
                 }
+            } else {
+                log::info!("output file does not exist");
             }
             eprintln!();
         }
