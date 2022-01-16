@@ -27,6 +27,9 @@ pub(crate) fn solve(input: &str, out: &mut dyn FnMut(String)) {
         loop {
             let HeapEntry { cost, state: s } = frontier.pop().unwrap();
             if s.is_final() {
+                log::info!("{} visited", visited.len());
+                log::info!("{} frontier", frontier.len());
+                log::info!("max frontier entry: {}", frontier.iter().map(|e| e.cost).max().unwrap());
                 out(cost.to_string());
                 break;
             }

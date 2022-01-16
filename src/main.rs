@@ -2,6 +2,7 @@
 #![feature(iter_partition_in_place)]
 #![feature(let_else)]
 
+mod logger;
 mod sol01;
 mod sol02;
 mod sol03;
@@ -59,12 +60,15 @@ const SOLVERS: &[(i32, fn(&str, &mut dyn FnMut(String)))] = &[
 ];
 
 fn run(task_to_run: i32, generate: bool) {
+    log::set_boxed_logger(Box::new(logger::TimeDeltaLogger::default())).unwrap();
+    log::set_max_level(log::LevelFilter::Info);
+
     for &(task, solve) in SOLVERS {
         if task != task_to_run {
             continue;
         }
         for acc in ACCOUNTS {
-            eprintln!("Day {:02}, {}", task, acc);
+            log::info!("Day {:02}, {}", task, acc);
             let input_path = format!("data/{}/{:02}.in", acc, task);
             let output_path = format!("data/{}/{:02}.out", acc, task);
             if !std::fs::try_exists(&input_path).unwrap() {
@@ -75,10 +79,12 @@ fn run(task_to_run: i32, generate: bool) {
             let mut output = String::new();
             let mut out = |s: String| {
                 output.push_str(&s); output.push('\n');
-                eprintln!("OUT: {}", s);
+                log::info!("OUT: {}", s);
             };
 
+            log::info!("solving...");
             solve(&input, &mut out);
+            log::info!("done");
 
             if generate {
                 std::fs::write(output_path, output).unwrap();
@@ -86,11 +92,11 @@ fn run(task_to_run: i32, generate: bool) {
                 if std::fs::try_exists(&output_path).unwrap() {
                     let expected_output = std::fs::read_to_string(output_path).unwrap();
                     if output != expected_output {
-                        eprintln!("does not match expected output");
-                        eprintln!("{}", expected_output);
+                        log::info!("does not match expected output");
+                        log::info!("{}", expected_output);
                     }
                 } else {
-                    eprintln!("output file does not exist");
+                    log::info!("output file does not exist");
                 }
             }
             eprintln!();
