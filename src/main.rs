@@ -1,6 +1,5 @@
-#![feature(path_try_exists)]
+#![feature(fs_try_exists)]
 #![feature(iter_partition_in_place)]
-#![feature(let_else)]
 
 mod logger;
 mod sol01;
@@ -127,6 +126,7 @@ fn bench(tasks: &[i32]) {
                 output.push_str(&s); output.push('\n');
             };
             solve(&input, &mut out);
+            times.push(start.elapsed());
 
             assert_eq!(output, expected_output);
             println!("    {:?}", times);
